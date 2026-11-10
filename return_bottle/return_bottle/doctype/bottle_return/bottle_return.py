@@ -25,22 +25,39 @@ def get_settings(pos_profile):
     })
 
 
-def check_pos_context(pos_profile, company):
-    from erpnext.selling.page.point_of_sale.point_of_sale import check_pos_profile_access
+def check_pos_context(pos_profile, company=None):
+    """Authorize via the current cashier's open POS session.
 
+    ERPNext 15.84.0 does not provide check_pos_profile_access.  Cashiers may
+    also have no direct POS Profile *read* permission, despite being allowed
+    to use an assigned, opened POS.  A submitted, unclosed POS Opening Entry
+    for the signed-in user and exact profile is our access boundary.
+    """
     if not pos_profile:
         frappe.throw(_("POS Profile is required"))
-    check_pos_profile_access(pos_profile)
+
+    if not frappe.session.user or frappe.session.user == "Guest":
+        frappe.throw(_("Sign in to a POS session to receive bottles"), frappe.PermissionError)
+
     profile = frappe.get_doc("POS Profile", pos_profile)
-    if profile.company != company or profile.disabled:
+    if profile.disabled or (company and profile.company != company):
         frappe.throw(_("POS Profile is disabled or belongs to a different company"))
+
     opening = frappe.db.exists(
         "POS Opening Entry",
-        {"user": frappe.session.user, "pos_profile": pos_profile, "company": company, "docstatus": 1,
-         "pos_closing_entry": ["in", ["", None]]},
+        {
+            "user": frappe.session.user,
+            "pos_profile": pos_profile,
+            "company": profile.company,
+            "docstatus": 1,
+            "pos_closing_entry": ["in", ["", None]],
+        },
     )
     if not opening:
-        frappe.throw(_("An open POS Opening Entry is required to receive bottles"))
+        frappe.throw(
+            _("An open POS Opening Entry for this user and POS Profile is required to receive bottles"),
+            frappe.PermissionError,
+        )
     return profile
 
 
