@@ -101,52 +101,91 @@
         dialog.show();
     }
 
-    function add_button(wrapper) {
-        const pos = current_pos(wrapper);
-        if (!pos || !pos.settings || !Number(pos.settings.custom_rb_enabled)) return;
-        const customActions = pos.page.page_actions.find(".custom-actions");
-        if (customActions.find(".bottle-return-action").length) return;
-        const button = pos.page.add_button(__("Return Bottles"), () => open_dialog(pos), {
+    function add_button(pos) {
+        if (!pos || !pos.pos_profile || !pos.page || !pos.page.page_actions) return false;
+
+        const $actions = pos.page.page_actions.find(".custom-actions");
+        // ERPNext POS clears the header when prepare_fullscreen_btn runs.
+        // Do not insert before the standard toolbar is ready.
+        if (!$actions.length || !pos.page.page_actions.find(".fullscreen-btn").length) return false;
+        if ($actions.find(".bottle-return-action").length) return true;
+
+        const button = pos.page.add_button("تحصيل فارغ", () => {
+            if (!Number(pos.settings && pos.settings.custom_rb_enabled)) {
+                frappe.msgprint({
+                    title: __("Bottle Returns Not Enabled"),
+                    indicator: "orange",
+                    message: __("Enable Bottle Returns for POS Profile {0} and reload Point of Sale.", [
+                        pos.pos_profile,
+                    ]),
+                });
+                return;
+            }
+
+            open_dialog(pos).catch((error) => {
+                console.error("Bottle return configuration failed", error);
+                frappe.msgprint(__("Unable to open Bottle Returns. Check POS Profile settings and user permissions."));
+            });
+        }, {
             btn_class: "btn-default bottle-return-action",
-            icon: "refresh-ccw",
         });
+
         button.addClass("bottle-return-action");
+        return true;
     }
 
-    // Page hooks execute after the standard page script in Frappe's Page.load_assets.
-    // POS loads asynchronously; wrap make_app before the first POS controller construction.
     function hook_controller() {
         const Controller = window.erpnext && erpnext.PointOfSale && erpnext.PointOfSale.Controller;
-        if (!Controller || Controller.prototype.__bottle_return_hooked) return false;
-        const oldMakeApp = Controller.prototype.make_app;
-        Controller.prototype.make_app = function (...args) {
-            const result = oldMakeApp.apply(this, args);
-            add_button(this.page.wrapper);
+        if (!Controller || !Controller.prototype) return false;
+        if (Controller.prototype.__bottle_return_fullscreen_hooked) return true;
+        const original = Controller.prototype.prepare_fullscreen_btn;
+        if (typeof original !== "function") return false;
+
+        Controller.prototype.prepare_fullscreen_btn = function (...args) {
+            const result = original.apply(this, args);
+            // This is called after ERPNext clears and recreates the POS actions.
+            add_button(this);
             return result;
         };
-        Controller.prototype.__bottle_return_hooked = true;
+        Controller.prototype.__bottle_return_fullscreen_hooked = true;
         return true;
+    }
+
+    // Also cover a POS controller that finishes loading before our hook attaches.
+    function watch_pos(wrapper) {
+        if (!wrapper) return;
+        hook_controller();
+        if (add_button(wrapper.pos)) return;
+
+        if (wrapper.__bottle_return_poll) clearInterval(wrapper.__bottle_return_poll);
+        let attempts = 0;
+        wrapper.__bottle_return_poll = setInterval(() => {
+            hook_controller();
+            if (add_button(wrapper.pos) || ++attempts >= 150) {
+                clearInterval(wrapper.__bottle_return_poll);
+                wrapper.__bottle_return_poll = null;
+            }
+        }, 200);
     }
 
     const originalLoad = page.on_page_load;
     page.on_page_load = function (wrapper) {
         const result = originalLoad.call(this, wrapper);
-        let attempts = 0;
-        const timer = setInterval(() => {
-            if (hook_controller()) {
-                clearInterval(timer);
-                add_button(wrapper);
-            } else if (++attempts >= 300) {
-                clearInterval(timer);
-                console.warn("Bottle return: POS controller not available");
-            }
-        }, 100);
+        watch_pos(wrapper);
         return result;
     };
+
     const originalRefresh = page.refresh;
     page.refresh = function (wrapper) {
         const result = originalRefresh && originalRefresh.call(this, wrapper);
-        add_button(wrapper);
+        watch_pos(wrapper);
+        return result;
+    };
+
+    const originalShow = page.on_page_show;
+    page.on_page_show = function (wrapper) {
+        const result = originalShow && originalShow.call(this, wrapper);
+        watch_pos(wrapper);
         return result;
     };
 })();
