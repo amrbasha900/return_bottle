@@ -1,0 +1,113 @@
+{
+ "doctype": "DocType",
+ "name": "Bottle Return Settings",
+ "module": "Return Bottle",
+ "custom": 0,
+ "issingle": 1,
+ "track_changes": 1,
+ "field_order": [
+  "enabled",
+  "company",
+  "loyalty_program",
+  "points_per_bottle",
+  "stock_section",
+  "bottle_item",
+  "warehouse",
+  "stock_valuation_rate",
+  "account_section",
+  "reward_expense_account",
+  "stock_clearing_account"
+ ],
+ "fields": [
+  {
+   "fieldname": "enabled",
+   "label": "Enable Bottle Returns",
+   "fieldtype": "Check",
+   "default": "0"
+  },
+  {
+   "fieldname": "company",
+   "label": "Company",
+   "fieldtype": "Link",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "loyalty_program",
+   "label": "Loyalty Program",
+   "fieldtype": "Link",
+   "options": "Loyalty Program",
+   "reqd": 1,
+   "description": "Set its Conversion Factor to 1 and its Expense Account to the rewards LIABILITY account."
+  },
+  {
+   "fieldname": "points_per_bottle",
+   "label": "Points per Bottle (EGP)",
+   "fieldtype": "Int",
+   "default": "3",
+   "reqd": 1
+  },
+  {
+   "fieldname": "stock_section",
+   "label": "Stock Receipt",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "bottle_item",
+   "label": "Empty Bottle Item",
+   "fieldtype": "Link",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "warehouse",
+   "label": "Return Warehouse",
+   "fieldtype": "Link",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "stock_valuation_rate",
+   "label": "Stock Valuation per Bottle (EGP)",
+   "fieldtype": "Currency",
+   "default": "0",
+   "description": "Use 0 only where an empty bottle has no recoverable stock value. If positive, configure Stock Clearing Account."
+  },
+  {
+   "fieldname": "account_section",
+   "label": "Accounting",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "reward_expense_account",
+   "label": "Rewards Expense Account",
+   "fieldtype": "Link",
+   "options": "Account",
+   "reqd": 1,
+   "description": "Debited for the reward value less the stock value at issuance."
+  },
+  {
+   "fieldname": "stock_clearing_account",
+   "label": "Stock Clearing Account",
+   "fieldtype": "Link",
+   "options": "Account",
+   "description": "Temporary asset account used to bridge the Stock Entry and Journal Entry when valuation > 0."
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0
+  },
+  {
+   "role": "Accounts Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0
+  }
+ ]
+}

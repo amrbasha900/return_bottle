@@ -1,0 +1,181 @@
+{
+ "doctype": "DocType",
+ "name": "Bottle Return",
+ "module": "Return Bottle",
+ "custom": 0,
+ "is_submittable": 1,
+ "track_changes": 1,
+ "autoname": "format:BR-{YYYY}-{#####}",
+ "title_field": "customer",
+ "field_order": [
+  "company",
+  "pos_profile",
+  "customer",
+  "quantity",
+  "points_per_bottle",
+  "total_points",
+  "reward_amount",
+  "posting_date",
+  "column_break_1",
+  "cashier",
+  "bottle_item",
+  "warehouse",
+  "stock_value",
+  "links_section",
+  "stock_entry",
+  "journal_entry",
+  "loyalty_point_entry",
+  "client_request_id"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "label": "Company",
+   "fieldtype": "Link",
+   "options": "Company",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "pos_profile",
+   "label": "POS Profile",
+   "fieldtype": "Link",
+   "options": "POS Profile",
+   "reqd": 1
+  },
+  {
+   "fieldname": "customer",
+   "label": "Customer",
+   "fieldtype": "Link",
+   "options": "Customer",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "quantity",
+   "label": "Bottles Returned",
+   "fieldtype": "Int",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "points_per_bottle",
+   "label": "Points per Bottle",
+   "fieldtype": "Int",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_points",
+   "label": "Loyalty Points Issued",
+   "fieldtype": "Int",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "reward_amount",
+   "label": "Reward Amount (EGP)",
+   "fieldtype": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "posting_date",
+   "label": "Return Date",
+   "fieldtype": "Date",
+   "default": "Today",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cashier",
+   "label": "Cashier",
+   "fieldtype": "Link",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "bottle_item",
+   "label": "Empty Bottle Item",
+   "fieldtype": "Link",
+   "options": "Item",
+   "read_only": 1
+  },
+  {
+   "fieldname": "warehouse",
+   "label": "Return Warehouse",
+   "fieldtype": "Link",
+   "options": "Warehouse",
+   "read_only": 1
+  },
+  {
+   "fieldname": "stock_value",
+   "label": "Stock Value (EGP)",
+   "fieldtype": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "links_section",
+   "label": "Generated Documents",
+   "fieldtype": "Section Break",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "stock_entry",
+   "label": "Stock Entry",
+   "fieldtype": "Link",
+   "options": "Stock Entry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "journal_entry",
+   "label": "Journal Entry",
+   "fieldtype": "Link",
+   "options": "Journal Entry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "loyalty_point_entry",
+   "label": "Loyalty Point Entry",
+   "fieldtype": "Link",
+   "options": "Loyalty Point Entry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "client_request_id",
+   "label": "Request ID",
+   "fieldtype": "Data",
+   "unique": 1,
+   "read_only": 1,
+   "hidden": 1,
+   "no_copy": 1
+  }
+ ],
+ "permissions": [
+  {
+   "role": "Sales User",
+   "read": 1,
+   "create": 1,
+   "write": 1,
+   "submit": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "create": 1,
+   "write": 1,
+   "submit": 1,
+   "cancel": 1
+  },
+  {
+   "role": "System Manager",
+   "read": 1,
+   "create": 1,
+   "write": 1,
+   "submit": 1,
+   "cancel": 1
+  }
+ ]
+}
