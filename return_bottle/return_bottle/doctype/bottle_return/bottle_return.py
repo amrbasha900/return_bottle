@@ -83,9 +83,13 @@ class BottleReturn(Document):
         if self.loyalty_point_entry:
             frappe.get_doc("Loyalty Point Entry", self.loyalty_point_entry).delete(ignore_permissions=True)
         if self.journal_entry:
-            frappe.get_doc("Journal Entry", self.journal_entry).cancel()
+            journal = frappe.get_doc("Journal Entry", self.journal_entry)
+            journal.flags.ignore_permissions = True
+            journal.cancel()
         if self.stock_entry:
-            frappe.get_doc("Stock Entry", self.stock_entry).cancel()
+            stock = frappe.get_doc("Stock Entry", self.stock_entry)
+            stock.flags.ignore_permissions = True
+            stock.cancel()
 
     def _make_stock_entry(self, settings):
         entry = frappe.get_doc({
@@ -114,12 +118,17 @@ class BottleReturn(Document):
         if valued and not cint(is_perpetual_inventory_enabled(self.company)):
             frappe.throw(_("Perpetual inventory must be enabled for valued bottle returns"))
 
+        cost_center = frappe.db.get_value("Loyalty Program", settings.loyalty_program, "cost_center")
         entries = []
         if valued:
             entries.append({"account": settings.stock_clearing_account, "debit_in_account_currency": valued})
         difference = flt(amount - valued, 2)
         if difference > 0:
-            entries.append({"account": settings.reward_expense_account, "debit_in_account_currency": difference})
+            entries.append({
+                "account": settings.reward_expense_account,
+                "debit_in_account_currency": difference,
+                "cost_center": cost_center,
+            })
         entries.append({"account": frappe.db.get_value("Loyalty Program", settings.loyalty_program, "expense_account"),
                         "credit_in_account_currency": amount})
         je = frappe.get_doc({

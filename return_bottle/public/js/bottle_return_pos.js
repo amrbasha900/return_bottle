@@ -132,7 +132,7 @@
             if (hook_controller()) {
                 clearInterval(timer);
                 add_button(wrapper);
-            } else if (++attempts >= 100) {
+            } else if (++attempts >= 300) {
                 clearInterval(timer);
                 console.warn("Bottle return: POS controller not available");
             }
