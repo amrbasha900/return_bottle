@@ -20,6 +20,7 @@ def get_pos_configuration(pos_profile):
         "company": settings.company,
         "points_per_bottle": cint(settings.points_per_bottle),
         "loyalty_program": settings.loyalty_program,
+        "warehouse": settings.warehouse,
     }
 
 

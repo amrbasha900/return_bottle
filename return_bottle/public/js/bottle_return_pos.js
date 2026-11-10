@@ -37,6 +37,10 @@
                     default: setup.points_per_bottle,
                 },
                 {
+                    label: __("Receiving Warehouse"), fieldname: "receiving_warehouse",
+                    fieldtype: "Data", read_only: 1, default: setup.warehouse,
+                },
+                {
                     label: __("POS Profile"), fieldname: "pos_profile",
                     fieldtype: "Data", read_only: 1, default: profile,
                 },
@@ -99,7 +103,7 @@
 
     function add_button(wrapper) {
         const pos = current_pos(wrapper);
-        if (!pos) return;
+        if (!pos || !pos.settings || !Number(pos.settings.custom_rb_enabled)) return;
         const customActions = pos.page.page_actions.find(".custom-actions");
         if (customActions.find(".bottle-return-action").length) return;
         const button = pos.page.add_button(__("Return Bottles"), () => open_dialog(pos), {

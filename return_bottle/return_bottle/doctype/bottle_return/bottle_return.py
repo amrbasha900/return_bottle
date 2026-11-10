@@ -4,11 +4,25 @@ from frappe.model.document import Document
 from frappe.utils import add_days, cint, flt, getdate, nowdate
 
 
-def get_settings():
-    settings = frappe.get_single("Bottle Return Settings")
-    if not settings.enabled:
-        frappe.throw(_("Bottle returns are disabled. Ask the administrator to configure Bottle Return Settings."))
-    return settings
+def get_settings(pos_profile):
+    """Get the configured return settings for this exact POS Profile."""
+    profile = frappe.get_doc("POS Profile", pos_profile)
+    if not cint(profile.get("custom_rb_enabled")):
+        frappe.throw(_("Bottle returns are not enabled for POS Profile {0}").format(pos_profile))
+
+    from return_bottle.pos_profile import validate_pos_profile
+
+    validate_pos_profile(profile)
+    return frappe._dict({
+        "company": profile.company,
+        "loyalty_program": profile.custom_rb_loyalty_program,
+        "points_per_bottle": cint(profile.custom_rb_points_per_bottle),
+        "bottle_item": profile.custom_rb_bottle_item,
+        "warehouse": profile.custom_rb_empty_bottle_warehouse,
+        "stock_valuation_rate": flt(profile.custom_rb_stock_valuation_rate),
+        "reward_expense_account": profile.custom_rb_reward_expense_account,
+        "stock_clearing_account": profile.custom_rb_stock_clearing_account,
+    })
 
 
 def check_pos_context(pos_profile, company):
@@ -36,9 +50,9 @@ class BottleReturn(Document):
         self.posting_date = nowdate()
 
     def validate(self):
-        settings = get_settings()
+        settings = get_settings(self.pos_profile)
         if self.company != settings.company:
-            frappe.throw(_("Bottle returns are configured for another company"))
+            frappe.throw(_("POS Profile company does not match bottle return company"))
         check_pos_context(self.pos_profile, self.company)
         if not frappe.has_permission("Customer", "read", doc=self.customer):
             frappe.throw(_("Not permitted to use the selected customer"), frappe.PermissionError)
@@ -64,7 +78,7 @@ class BottleReturn(Document):
             frappe.throw(_("Customer is enrolled in a different Loyalty Program"))
 
     def on_submit(self):
-        settings = get_settings()
+        settings = get_settings(self.pos_profile)
         # All three records are written inside the document's transaction.
         self._make_stock_entry(settings)
         self._make_journal(settings)

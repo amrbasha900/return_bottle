@@ -252,3 +252,12 @@ page_js = {"point-of-sale": "public/js/bottle_return_pos.js"}
 override_doctype_class = {
     "POS Invoice": "return_bottle.overrides.BottleReturnPOSInvoice",
 }
+
+# Create per-profile fields on install and migration; do not update ERPNext core.
+after_install = "return_bottle.pos_profile.setup_pos_profile_fields"
+after_migrate = "return_bottle.pos_profile.setup_pos_profile_fields"
+doc_events = {
+    "POS Profile": {
+        "validate": "return_bottle.pos_profile.validate_pos_profile",
+    },
+}
