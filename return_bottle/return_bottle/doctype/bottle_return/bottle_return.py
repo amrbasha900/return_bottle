@@ -43,21 +43,28 @@ def check_pos_context(pos_profile, company=None):
     if profile.disabled or (company and profile.company != company):
         frappe.throw(_("POS Profile is disabled or belongs to a different company"))
 
-    opening = frappe.db.exists(
-        "POS Opening Entry",
-        {
-            "user": frappe.session.user,
-            "pos_profile": pos_profile,
-            "company": profile.company,
-            "docstatus": 1,
-            "pos_closing_entry": ["in", ["", None]],
-        },
+    # Reuse the exact session lookup that powers ERPNext v15.84.0 POS.
+    # db.exists() uses a different query path and can disagree with POS
+    # over NULL/empty pos_closing_entry values.
+    from erpnext.selling.page.point_of_sale.point_of_sale import check_opening_entry
+
+    openings = check_opening_entry(frappe.session.user)
+    match = next(
+        (
+            row for row in openings
+            if row.get("pos_profile") == pos_profile
+            and row.get("company") == profile.company
+        ),
+        None,
     )
-    if not opening:
-        frappe.throw(
-            _("An open POS Opening Entry for this user and POS Profile is required to receive bottles"),
-            frappe.PermissionError,
+    if not match:
+        message = (
+            _("The current user's open POS session belongs to a different POS Profile. Reload the POS page.")
+            if openings
+            else _("No open POS session was found for the signed-in user. Reopen Point of Sale.")
         )
+        frappe.throw(message, frappe.PermissionError)
+
     return profile
 
 
