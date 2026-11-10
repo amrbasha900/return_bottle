@@ -11,7 +11,7 @@ FIELDS = {
             "fieldname": "custom_rb_section",
             "label": "Empty Bottle Returns",
             "fieldtype": "Section Break",
-            "insert_after": "warehouse",
+            "insert_after": "allow_partial_payment",
             "collapsible": 1,
         },
         {
