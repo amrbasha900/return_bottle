@@ -2,7 +2,7 @@
 
 Lightweight bottle returns inside **standard ERPNext POS**, with an independent **return warehouse for each POS Profile**. No core ERPNext modifications and no separate cashier screen.
 
-**Reward:** 3 points per empty bottle (or a configured whole-number rate); 1 point = EGP 1 in the native ERPNext POS loyalty redemption. Normal POS sales never earn points from the bottle-return loyalty programme.
+**Reward:** 3 points per empty bottle (or a configured whole-number rate); 1 point = one unit of the company base currency in the native ERPNext POS loyalty redemption. Normal POS sales never earn points from the bottle-return loyalty programme.
 
 ## POS Profile settings (new)
 
@@ -14,12 +14,12 @@ Once the app is installed or migrated, open **Accounts > POS Profile > [your pro
 | Empty Bottle Warehouse | Branch A - Empty Bottles; **separate from regular selling warehouse** |
 | Empty Bottle Item | EMPTY-GLASS-BOTTLE (stock-managed) |
 | Reward Points per Bottle | 3 |
-| Empty Bottle Valuation (EGP) | Real recoverable book value, or 0 only when justified |
+| Empty Bottle Valuation (Company Currency) | Real recoverable book value, or 0 only when justified |
 | Bottle Return Loyalty Program | Bottle Return Rewards |
-| Bottle Reward Expense Account | Bottle Rewards Expense (EGP expense account) |
-| Bottle Stock Clearing Account | EGP non-stock Asset account, only when valuation > 0 |
+| Bottle Reward Expense Account | Bottle Rewards Expense (company-currency expense account) |
+| Bottle Stock Clearing Account | company-currency non-stock Asset account, only when valuation > 0 |
 
-**Example:** POS Profile Cairo Branch -> Empty Bottles - Cairo; POS Profile Giza Branch -> Empty Bottles - Giza. Each return uses only the warehouse configured for the cashier's **open** POS Profile. The shared loyalty programme lets a customer earn points in one branch and redeem in another branch of the same EGP company.
+**Example:** POS Profile Cairo Branch -> Empty Bottles - Cairo; POS Profile Giza Branch -> Empty Bottles - Giza. Each return uses only the warehouse configured for the cashier's **open** POS Profile. The shared loyalty programme lets a customer earn points in one branch and redeem in another branch of the same company.
 
 No `Bottle Return Settings` singleton remains. A migration patch retires that DocType **without copying its old warehouse automatically**: configure each POS Profile explicitly before receiving bottles. Existing submitted Bottle Return records remain as they are.
 
@@ -27,7 +27,7 @@ No `Bottle Return Settings` singleton remains. A migration patch retires that Do
 
 1. Create a stock Item for empty glass bottles, e.g. `EMPTY-GLASS-BOTTLE` (Stock UOM Nos, not serialised/batched).
 2. Create a leaf **Warehouse per branch** for empty bottles.
-3. In the EGP company, create **Bottle Rewards Liability** (Liability account), **Bottle Rewards Expense** (Expense account), and optionally **Bottle Stock Clearing** (Asset account, not Account Type Stock) for positive inventory valuation.
+3. In the POS company, create **Bottle Rewards Liability** (Liability account), **Bottle Rewards Expense** (Expense account), and optionally **Bottle Stock Clearing** (Asset account, not Account Type Stock) for positive inventory valuation.
 4. Create one **Loyalty Program** named `Bottle Return Rewards` for the company:
    - Single Tier, From Date today or earlier, Tier `Bottle Return` with Minimum Total Spent 0 and Collection Factor 1000000000 (POS Invoice earning is disabled by the app).
    - **Conversion Factor = 1**; expiry duration e.g. 365 days; select a **Cost Center**.
@@ -56,7 +56,7 @@ If already installed, check out/pull the feature branch in `apps/return_bottle`,
 ## دليل استخدام الكاشير
 
 1. افتح **Point of Sale** بحساب الكاشير وسجّل **POS Opening Entry** لبروفايل نقطة البيع.
-2. إذا كانت الخاصية مفعلة في هذا البروفايل، سيظهر زر **Return Bottles** بجوار أدوات شاشة POS.
+2. يظهر زر **تحصيل فارغ** في شريط أدوات شاشة POS بعد فتح جلسة الكاشير. إذا لم تفعّل الخاصية على هذا POS Profile فسيظهر تنبيه يوضح الإعداد المطلوب عند الضغط.
 3. اختار **العميل**، واكتب **عدد الزجاجات**. هتظهر النقاط المستحقة تلقائيًا (5 زجاجات = 15 نقطة).
 4. النافذة تعرض **مخزن الزجاجات المرتجعة** الخاص بالبروفايل الحالي للقراءة فقط، ولا يستطيع الكاشير تغييره.
 5. اضغط **Confirm Bottle Return**. يتم إنشاء Bottle Return + Stock Entry + Journal Entry + Loyalty Point Entry في نفس عملية الاعتماد.
@@ -64,7 +64,7 @@ If already installed, check out/pull the feature branch in `apps/return_bottle`,
 
 ## Accounting
 
-For five returned bottles at EGP 3 each and an empty bottle inventory value of zero, award issuance generates DR Bottle Rewards Expense 15 / CR Bottle Rewards Liability 15, along with a zero-valued stock receipt of five bottles. For a value of EGP 2 per bottle, the stock receipt is DR Inventory 10 / CR Stock Clearing 10; the reward journal is DR Stock Clearing 10, DR Rewards Expense 5 / CR Rewards Liability 15. Standard POS loyalty redemption debits the programme's linked Liability account and credits the customer settlement. Confirm local taxation and bottle valuation with accounting.
+For five returned bottles worth 3 in company currency each and an empty bottle inventory value of zero, award issuance generates DR Bottle Rewards Expense 15 / CR Bottle Rewards Liability 15, along with a zero-valued stock receipt of five bottles. For a book value of 2 in company currency per bottle, the stock receipt is DR Inventory 10 / CR Stock Clearing 10; the reward journal is DR Stock Clearing 10, DR Rewards Expense 5 / CR Rewards Liability 15. Standard POS loyalty redemption debits the programme's linked Liability account and credits the customer settlement. Confirm local taxation and bottle valuation with accounting.
 
 ## Safety and assumptions
 
@@ -73,7 +73,7 @@ For five returned bottles at EGP 3 each and an empty bottle inventory value of z
 - No automatic copying of legacy singleton configuration to all branches, and no fallback to POS selling warehouse.
 - Enabled bottle return loyalty programmes **never earn points from normal POS sales**, even on a different profile of the same company, via the POS Invoice class override. Redemption uses native ERPNext logic.
 - Existing POS Invoice overrides from another Frappe app need explicit reconciliation. Standard Sales Invoices outside POS are not part of this change, so do not use the bottle programme to award points on those invoices.
-- Initial release uses an EGP company and 1:1 EGP loyalty-point conversion, as specified.
+- This release uses the **POS company base currency**, not a fixed EGP currency. A reward of 3 points is SAR 3 for an SAR company, and EGP 3 for an EGP company. Cross-currency rewards are not supported.
 
 ## QA before merge
 

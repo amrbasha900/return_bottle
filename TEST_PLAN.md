@@ -4,7 +4,7 @@ This checklist is manual; GitHub code review is not a passing ERPNext integratio
 
 1. On an isolated ERPNext v15 site, install or upgrade the app, migrate, build and clear cache.
 2. Assert the old `Bottle Return Settings` DocType was removed and no existing submitted Bottle Return records changed.
-3. Configure POS Profile A with **Empty Bottles A**, Profile B with **Empty Bottles B**, both with the same EGP-company loyalty programme.
+3. Configure POS Profile A with **Empty Bottles A**, Profile B with **Empty Bottles B**, both with the same company-currency loyalty programme.
 4. Leave Profile C bottle returns disabled: it should not show a Return Bottles action.
 5. Open POS A as a cashier; return 5 bottles for a real Customer. Confirm Stock Entry A +5 in Warehouse A only, 15 points, valid Journal Entry.
 6. Open POS B as a second cashier; return 2 bottles. Confirm Stock Entry B +2 in Warehouse B only, 6 points, valid Journal Entry.

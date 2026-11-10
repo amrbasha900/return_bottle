@@ -45,7 +45,7 @@ FIELDS = {
         },
         {
             "fieldname": "custom_rb_stock_valuation_rate",
-            "label": "Empty Bottle Valuation (EGP)",
+            "label": "Empty Bottle Valuation (Company Currency)",
             "fieldtype": "Currency",
             "default": "0",
             "insert_after": "custom_rb_points_per_bottle",
@@ -115,8 +115,8 @@ def validate_pos_profile(doc, method=None):
         frappe.throw(_("Empty Bottle Valuation must be between 0 and the reward per bottle."))
 
     currency = frappe.db.get_value("Company", doc.company, "default_currency")
-    if currency != "EGP":
-        frappe.throw(_("Bottle returns require an EGP company (1 point = EGP 1)."))
+    if not currency:
+        frappe.throw(_("Configure the company's default currency before enabling bottle returns."))
 
     warehouse = frappe.db.get_value(
         "Warehouse", doc.custom_rb_empty_bottle_warehouse, ["company", "is_group"], as_dict=True
@@ -133,7 +133,7 @@ def validate_pos_profile(doc, method=None):
 
     program = frappe.get_doc("Loyalty Program", doc.custom_rb_loyalty_program)
     if program.company != doc.company or flt(program.conversion_factor) != 1:
-        frappe.throw(_("Bottle Loyalty Program must belong to this company and convert 1 point to EGP 1."))
+        frappe.throw(_("Bottle Loyalty Program must belong to this company and convert 1 point to one unit of the company currency."))
     if not program.collection_rules or not program.cost_center or not program.expense_account:
         frappe.throw(_("Configure the Loyalty Program's collection tier, cost center and liability account."))
 
@@ -148,9 +148,9 @@ def validate_pos_profile(doc, method=None):
             or account.company != doc.company
             or account.root_type != root_type
             or account.is_group
-            or account.account_currency != "EGP"
+            or account.account_currency != currency
         ):
-            frappe.throw(_("{0} must be a non-group EGP {1} account in this company.").format(name, root_type))
+            frappe.throw(_("{0} must be a non-group {1} account in this company, denominated in {2}.").format(name, root_type, currency))
         return account
 
     check_account(program.expense_account, "Liability")

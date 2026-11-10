@@ -73,7 +73,7 @@
   },
   {
    "fieldname": "reward_amount",
-   "label": "Reward Amount (EGP)",
+   "label": "Reward Amount (Company Currency)",
    "fieldtype": "Currency",
    "read_only": 1
   },
@@ -112,7 +112,7 @@
   },
   {
    "fieldname": "stock_value",
-   "label": "Stock Value (EGP)",
+   "label": "Stock Value (Company Currency)",
    "fieldtype": "Currency",
    "read_only": 1
   },
