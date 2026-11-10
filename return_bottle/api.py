@@ -14,8 +14,8 @@ from return_bottle.return_bottle.doctype.bottle_return.bottle_return import (
 def get_pos_configuration(pos_profile):
     if not frappe.has_permission("Bottle Return", "create"):
         frappe.throw(_("Not permitted to receive bottles"), frappe.PermissionError)
-    settings = get_settings(pos_profile)
-    check_pos_context(pos_profile, settings.company)
+    profile = check_pos_context(pos_profile)
+    settings = get_settings(profile.name)
     return {
         "company": settings.company,
         "points_per_bottle": cint(settings.points_per_bottle),
@@ -29,8 +29,8 @@ def receive_bottles(customer, quantity, pos_profile, request_id):
     if not frappe.has_permission("Bottle Return", "create"):
         frappe.throw(_("Not permitted to receive bottles"), frappe.PermissionError)
 
-    settings = get_settings(pos_profile)
-    check_pos_context(pos_profile, settings.company)
+    profile = check_pos_context(pos_profile)
+    settings = get_settings(profile.name)
     try:
         rid = str(uuid.UUID(str(request_id)))
     except (ValueError, TypeError, AttributeError):
