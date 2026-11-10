@@ -242,3 +242,22 @@ app_license = "mit"
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
 
+
+
+# Keep the standard ERPNext POS page; inject a small optional toolbar action.
+page_js = {"point-of-sale": "public/js/bottle_return_pos.js"}
+
+# POS invoices can redeem bottle points but do not earn points from sales.
+# Important: if another app overrides POS Invoice, merge the override classes.
+override_doctype_class = {
+    "POS Invoice": "return_bottle.overrides.BottleReturnPOSInvoice",
+}
+
+# Create per-profile fields on install and migration; do not update ERPNext core.
+after_install = "return_bottle.pos_profile.setup_pos_profile_fields"
+after_migrate = "return_bottle.pos_profile.setup_pos_profile_fields"
+doc_events = {
+    "POS Profile": {
+        "validate": "return_bottle.pos_profile.validate_pos_profile",
+    },
+}
